@@ -13,9 +13,11 @@ do
     output_name=${package_name}'-'${GOOS}'-'${GOARCH}
     if [ $GOOS = "windows" ]; then
         output_name+='.exe'
-    fi  
+    fi
 
-    GOOS=${GOOS} GOARCH=${GOARCH} go build -v -o build/${output_name} ${package}
+    echo "Building ${GOOS}-${GOARCH}"
+
+    GOOS=${GOOS} GOARCH=${GOARCH} CGO_ENABLED=0 go build -ldflags="-w -s" -v -o build/${output_name} ${package}
     if [ $? -ne 0 ]; then
         echo 'An error has occurred! Aborting the script execution...'
         exit 1
