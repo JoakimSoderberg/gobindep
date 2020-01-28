@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"io/ioutil"
+	"text/template"
 
 	"github.com/JoakimSoderberg/gobindep/module"
 	"github.com/rsc/goversion/version"
@@ -12,10 +14,21 @@ import (
 	flag "github.com/spf13/pflag"
 )
 
+// Output represents an output context.
+//
+// This is used when outputting
+type Output struct {
+	Executable string          `json:"executable"`
+	Size       int64           `json:"size"`
+	Modules    []module.Module `json:"modules"`
+}
+
 func main() {
 	flags := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	showHelp := flags.Bool("help", false, "Show this help")
 	outputJSON := flags.Bool("json", false, "Output results in JSON")
+	outputTemplate := flags.String("template", "", "Output results based on the specified template string")
+	outputTemplateFile := flags.String("template-file", "", "Output results based on the specified template file")
 
 	flags.Parse(os.Args[1:])
 	args := flags.Args()
@@ -52,10 +65,47 @@ func main() {
 		os.Exit(1)
 	}
 
-	if *outputJSON {
-		json, err := json.Marshal(struct {
-			Modules []module.Module `json:"modules"`
-		}{mods})
+	var output Output
+	output.Executable = exePath
+	output.Modules = mods
+
+	// Read the size of the executable.
+	fileinfo, err := os.Stat(exePath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error stating file: %s\n", err)
+		os.Exit(1)
+	}
+
+	output.Size = fileinfo.Size()
+
+	var templateString string
+	if len(*outputTemplateFile) > 0 {
+		contents, err := ioutil.ReadFile(*outputTemplateFile)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error, failed to open output template: %s\n", err)
+			os.Exit(1)
+		}
+		templateString = string(contents)
+	} else {
+		templateString = *outputTemplate
+	}
+
+	if len(templateString) > 0 {
+		tmpl := template.New("template")
+
+		tmpl, err = tmpl.Parse(string(templateString))
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error, failed to parse the output template: %s\n", err)
+			os.Exit(1)
+		}
+
+		err = tmpl.Execute(os.Stdout, output)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error, failed to execute template: %s\n", err)
+			os.Exit(1)
+		}
+	} else if *outputJSON {
+		json, err := json.Marshal(output)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to output module info as JSON: %s\n", err)
 			os.Exit(1)
