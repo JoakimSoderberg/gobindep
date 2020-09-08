@@ -11,10 +11,10 @@ import (
 // All helper functions on Module work with zero values. See their associated
 // documentation for more information on exact behavior.
 type Module struct {
-	Path    string  `json:"path"`    // Import path, such as "github.com/mitchellh/golicense"
-	Version string  `json:"version"` // Version like "v1.2.3"
-	Hash    string  `json:"hash"`    // Hash such as "h1:abcd1234"
-	Replace *Module `json:"replace"` // If the module was replaced
+	Path    string  `json:"path"`              // Import path, such as "github.com/mitchellh/golicense"
+	Version string  `json:"version"`           // Version like "v1.2.3"
+	Hash    string  `json:"hash"`              // Hash such as "h1:abcd1234"
+	Replace *Module `json:"replace,omitempty"` // If the module was replaced
 }
 
 // String returns a human readable string format.
@@ -57,7 +57,6 @@ func ParseExeData(raw string) ([]Module, error) {
 		if row[0] == "=>" {
 			prev := &result[len(result)-1]
 			prev.Replace = &next
-			prev.Hash = next.Hash
 		} else {
 			// Not a replacement so append it to the list
 			result = append(result, next)

@@ -80,7 +80,7 @@ func TestParseExeData(t *testing.T) {
 				Module{
 					Path:    "github.com/markbates/inflect",
 					Version: "v1.0.0",
-					Hash:    "h1:LZhVjIISSbj8qLf2qDPP0D8z0uvOWAW5C85ly5mJW6c=",
+					Hash:    "",
 					Replace: &Module{
 						Path:    "",
 						Version: "v0.0.0-20171215194931-a12c3aec81a6",
@@ -112,7 +112,7 @@ func TestParseExeData(t *testing.T) {
 				{
 					Path:    "github.com/go-enry/go-license-detector/v4",
 					Version: "v4.0.0",
-					Hash:    "h1:YOPawvrqnDbtX+T+oM2b6UMNOCMqo+DoP6A6qzsfVHI=",
+					Hash:    "",
 					Replace: &Module{
 						Path:    "github.com/JoakimSoderberg/go-license-detector/v4",
 						Version: "v4.0.0-20200827131053-a8ed0b9cb40a",

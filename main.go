@@ -23,12 +23,15 @@ type Output struct {
 	Modules    []module.Module `json:"modules"`
 }
 
+var replaceOverwrites bool
+
 func main() {
 	flags := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 	showHelp := flags.Bool("help", false, "Show this help")
 	outputJSON := flags.Bool("json", false, "Output results in JSON")
 	outputTemplate := flags.String("template", "", "Output results based on the specified template string")
 	outputTemplateFile := flags.String("template-file", "", "Output results based on the specified template file")
+	flags.BoolVar(&replaceOverwrites, "replace-overwrites", true, "When outputting should a replaced module overwrite the original? If set to false, we add a nested \"replace\" instead for JSON.")
 
 	flags.Parse(os.Args[1:])
 	args := flags.Args()
@@ -63,6 +66,20 @@ func main() {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error parsing dependencies: %s\n", err)
 		os.Exit(1)
+	}
+
+	if replaceOverwrites {
+		for i := range mods {
+			mod := &mods[i]
+			if mod.Replace == nil {
+				continue
+			}
+
+			mod.Path = mod.Replace.Path
+			mod.Version = mod.Replace.Version
+			mod.Hash = mod.Replace.Hash
+			mod.Replace = nil
+		}
 	}
 
 	var output Output

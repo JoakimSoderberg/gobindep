@@ -1,13 +1,15 @@
 # gobindep
 
-This program lists the dependencies for **Go binaries** that were compiled using **Go modules**.
+This program lists the dependencies for **Go binaries** that were compiled using **Go modules** support.
 
-This will only include the dependencies that are actually used by the final executable. This can be ompared to the dependencies listed in `go.mod` that might include code that is only used for Tests for example.
+Only the dependencies that are actually used by the final executable are included.
+This can be compared to the dependencies listed in `go.mod` that might include code that is only used for Tests for example.
 
 ## Usage
 
 ```bash
 gobindep your-go-executable
+gobindep --help
 ```
 
 ## Combined with security scanning
@@ -17,7 +19,7 @@ This tool can be used for doing a security scan of used dependencies such as **S
 * https://github.com/sonatype-nexus-community/nancy
 
 ```bash
-# Run security check on pre-build dependencies
+# Run security check on the dependencies in the go.sum file
 $ nancy go.sum
 ...
 Audited dependencies: 65, Vulnerable: 0
