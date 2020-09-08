@@ -2,7 +2,6 @@ package module
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 )
 
@@ -12,9 +11,10 @@ import (
 // All helper functions on Module work with zero values. See their associated
 // documentation for more information on exact behavior.
 type Module struct {
-	Path    string `json:"path"`    // Import path, such as "github.com/mitchellh/golicense"
-	Version string `json:"version"` // Version like "v1.2.3"
-	Hash    string `json:"hash"`    // Hash such as "h1:abcd1234"
+	Path    string  `json:"path"`    // Import path, such as "github.com/mitchellh/golicense"
+	Version string  `json:"version"` // Version like "v1.2.3"
+	Hash    string  `json:"hash"`    // Hash such as "h1:abcd1234"
+	Replace *Module `json:"replace"` // If the module was replaced
 }
 
 // String returns a human readable string format.
@@ -46,31 +46,23 @@ func ParseExeData(raw string) ([]Module, error) {
 				"Unexpected raw dependency format: %s", line)
 		}
 
-		// If the path ends in an import version, strip it since we have
-		// an exact version available in Version.
-		if loc := importVersionRe.FindStringIndex(row[1]); loc != nil {
-			row[1] = row[1][:loc[0]]
-		}
-
 		next := Module{
 			Path:    row[1],
 			Version: row[2],
 			Hash:    row[3],
+			Replace: nil,
 		}
 
-		// If this is a replacement, then replace the last result
+		// If this is a replacement, then add it to the last result
 		if row[0] == "=>" {
-			result[len(result)-1] = next
-			continue
+			prev := &result[len(result)-1]
+			prev.Replace = &next
+			prev.Hash = next.Hash
+		} else {
+			// Not a replacement so append it to the list
+			result = append(result, next)
 		}
-
-		result = append(result, next)
 	}
 
 	return result, nil
 }
-
-// importVersionRe is a regular expression that matches the trailing
-// import version specifiers like `/v12` on an import that is Go modules
-// compatible.
-var importVersionRe = regexp.MustCompile(`/v\d+$`)
